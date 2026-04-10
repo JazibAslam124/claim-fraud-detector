@@ -1,13 +1,20 @@
 import requests
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
+try:
+    import streamlit as st
+    CLIENT_ID     = st.secrets["CAMUNDA_CLIENT_ID"]
+    CLIENT_SECRET = st.secrets["CAMUNDA_CLIENT_SECRET"]
+    CLUSTER_ID    = st.secrets["CAMUNDA_CLUSTER_ID"]
+    REGION        = st.secrets["CAMUNDA_REGION"]
+except:
+    from dotenv import load_dotenv
+    load_dotenv()
+    CLIENT_ID     = os.getenv("CAMUNDA_CLIENT_ID")
+    CLIENT_SECRET = os.getenv("CAMUNDA_CLIENT_SECRET")
+    CLUSTER_ID    = os.getenv("CAMUNDA_CLUSTER_ID")
+    REGION        = os.getenv("CAMUNDA_REGION")
 
-CLIENT_ID     = os.getenv("CAMUNDA_CLIENT_ID")
-CLIENT_SECRET = os.getenv("CAMUNDA_CLIENT_SECRET")
-CLUSTER_ID    = os.getenv("CAMUNDA_CLUSTER_ID")
-REGION        = os.getenv("CAMUNDA_REGION")
 
 def get_token():
     response = requests.post(
@@ -34,9 +41,9 @@ def start_process(claim: dict, fraud_score: int):
     payload = {
         "processDefinitionId": "Process_1vksbz2",
         "variables": {
-            "fraudScore": fraud_score,
+            "fraudScore":  fraud_score,
             "claimAmount": claim["claim_amount"],
-            "claimId": claim["claim_id"]
+            "claimId":     claim["claim_id"]
         }
     }
 
@@ -47,16 +54,17 @@ def start_process(claim: dict, fraud_score: int):
 
     response = requests.post(url, json=payload, headers=headers)
 
+    if fraud_score > 80:
+        decision = "Reject"
+    elif claim["claim_amount"] > 10000:
+        decision = "Manual Review"
+    else:
+        decision = "Approve"
+
     if response.status_code == 200:
-        if fraud_score > 80:
-            decision = "Reject"
-        elif claim["claim_amount"] > 10000:
-            decision = "Manual Review"
-        else:
-            decision = "Approve"
         print(f"   Decision: ✅ {decision}")
         print(f"   Camunda Instance: {response.json().get('processInstanceKey')}")
-        return decision
     else:
-        print(f"   ❌ Camunda error: {response.status_code} — {response.text}")
-        return None
+        print(f"   ⚠️ Camunda unavailable — decision made locally")
+
+    return decision
