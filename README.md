@@ -22,3 +22,12 @@ routing each claim to Reject, Manual Review, or Approve based on the score.
 3. Add your Camunda credentials to `.env`
 4. Generate and train: `python data/generate_data.py` then `python model.py`
 5. Run dashboard: `streamlit run streamlit_app.py`
+
+
+## Live Demo
+👉 [Try the Streamlit App](https://claim-fraud-detector-rdp9pspmu5n4fzy38j3kad.streamlit.app/)
+
+## Full Camunda Integration
+The complete Camunda Cloud integration (Python → REST API → BPMN routing) 
+is shown in the demo video and available in `camunda.py`.
+The BPMN process diagram is included in this repo as `diagram.bpmn`.
